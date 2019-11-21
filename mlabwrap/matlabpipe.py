@@ -18,8 +18,14 @@ License: MIT
 Fixes and improvements by `Charl Botha <http://charlbotha.com>`_ (scipy 0.12,
 documentation, finding matlab, code cleanups).
 """
+from __future__ import print_function
+from __future__ import unicode_literals
 
-from cStringIO import StringIO
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
+from io import StringIO
 import fcntl
 import numpy as np
 import os
@@ -77,7 +83,7 @@ def find_matlab_process():
         # this is from the old code. I don't have a Mac to test, but it
         # looks OK.
         base_path = '/Applications/MATLAB_R%d%s.app/bin/matlab'
-        years = range(2050, 1990, -1)
+        years = list(range(2050, 1990, -1))
         versions = ['h', 'g', 'f', 'e', 'd', 'c', 'b', 'a']
         for year in years:
             for version in versions:
@@ -118,7 +124,7 @@ def find_matlab_version(process_path):
         if mo:
             # mo.groups() should be e.g. ('7.13', '2011b')
             version = mo.groups()[1]
-            print "Found version:", version, "at", process_path
+            print("Found version:", version, "at", process_path)
             return version
 
     return None
@@ -225,7 +231,7 @@ class MatlabPipe(object):
 
         self._check_open()
         if print_expression:
-            print expression
+            print(expression)
 
         self.process.stdin.write(expression)
         self.process.stdin.write('\n')
@@ -292,7 +298,7 @@ class MatlabPipe(object):
         (0-dimension arrays) to a regular python variable.
         """
         self._check_open()
-        single_itme = isinstance(names_to_get, (unicode, str))
+        single_itme = isinstance(names_to_get, (str, str))
 
         if single_itme:
             names_to_get = [names_to_get]
@@ -350,7 +356,7 @@ class MatlabPipe(object):
         #print '******'
         temp.close()
 
-        for key in ret.iterkeys():
+        for key in ret.keys():
             # address problem 1: only do WTF if the returned value is an ndarray
             if isinstance(ret[key], np.ndarray):
                 # err WTF?! cpbotha is not sure what exactly is happening here.
@@ -459,7 +465,7 @@ if __name__ == '__main__':
             self.matlab.close()
 
         def test_eval(self):
-            for i in xrange(100):
+            for i in range(100):
                 ret = self.matlab.eval('disp \'hiush world%s\';' % ('b' * i))
                 self.assertTrue('hiush world' in ret)
 

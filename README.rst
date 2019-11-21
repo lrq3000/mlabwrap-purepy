@@ -26,6 +26,8 @@ Improvements
 * Documentation.
 * setuptools configuration, so you can install mlabwrap with a
   single pip invocation! See below for details.
+* Tested on Matlab 2018b
+* Preliminary support for Python 3 (tested on Windows), in addition to Python 2.7 support
 
 Quickstart
 ----------
@@ -49,7 +51,7 @@ Using from Python
 
 Also see the docstring in mlabwrap.py. It goes something like this::
 
-    import mlabwrap
+    from mlabwrap import mlabwrap
     mlab = mlabwrap.init()
 
 If the main matlab executable (or a symlink to it) is not on your system PATH,
@@ -57,8 +59,12 @@ pass its full path as the first parameter to init. Now you can do::
 
     sorted = mlab.sort([1 2 3])
 
-Or even::
+Or even:
 
     mlab._do("a = [3 2 1]; b = mean(a);", nout=0)
     print mlab.b
+
+To enable basic support for cell arrays or char arrays, use before your call:
+
+    mlab._dont_proxy["cell"] = True
 

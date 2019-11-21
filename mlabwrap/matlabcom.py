@@ -11,12 +11,16 @@ Dependencies: pywin32, numpy
 Tested Matlab Versions: 2011a 
 License: MIT
 """
+from __future__ import print_function
+from __future__ import unicode_literals
 
+from builtins import range
+from builtins import object
 import numpy as np
 try:
   import win32com.client
 except:
-  print 'win32com in missing, please install it'
+  print('win32com in missing, please install it')
   raise
 
 class MatlabError(Exception):
@@ -52,12 +56,16 @@ class MatlabCom(object):
   def close(self):
     """ Closes the matlab COM client.
     """
-    self._check_open()
+    try:
+        self._check_open()
+    except Exception as exc:
+        pass
     try: 
       self.eval('quit();')
-    except:
+    except Exception as exc:
       pass
     del self.client
+    self.client = None
   
   def eval(self, expression, identify_erros=True):
     """ Evaluates a matlab expression synchronously.
@@ -68,7 +76,10 @@ class MatlabCom(object):
     The return value of the function is the matlab output following the call.
     """
     #print expression
-    self._check_open()
+    try:
+        self._check_open()
+    except Exception as exc:
+        return 0
     ret = self.client.Execute(expression)
     #print ret
     if identify_erros and ret.rfind('???') != -1:
@@ -89,26 +100,26 @@ class MatlabCom(object):
     
     """
     self._check_open()
-    single_itme = isinstance(names_to_get, (unicode, str))
-    if single_itme:    
+    single_item = isinstance(names_to_get, (str, str))
+    if single_item:    
       names_to_get = [names_to_get]
     ret = {}
     for name in names_to_get:
-      ret[name] = self.client.GetWorkspaceData(name, 'base')
-      # TODO(daniv): Do we really want to reduce dimensions like that? what if this a row vector?
-      while isinstance(ret[name], (tuple, list)) and len(ret[name]) == 1:
-        ret[name] = ret[name][0]
-      if convert_to_numpy and isinstance(ret[name], (tuple, list)):
-        ret[name] = np.array(ret[name])
-    if single_itme:
-      return ret.values()[0]
+        ret[name] = self.client.GetWorkspaceData(name, 'base')
+        # TODO(daniv): Do we really want to reduce dimensions like that? what if this a row vector?
+        while isinstance(ret[name], (tuple, list)) and len(ret[name]) == 1:
+            ret[name] = ret[name][0]
+        if convert_to_numpy and isinstance(ret[name], (tuple, list)):
+            ret[name] = np.array(ret[name])
+    if single_item:
+        return list(ret.values())[0]
     return ret
 
   def put(self, name_to_val):
     """ Loads a dictionary of variable names into the matlab com client.    
     """
     self._check_open()
-    for name, val in name_to_val.iteritems():
+    for name, val in name_to_val.items():
       # First try to put data as a matrix:
       try:
         self.client.PutFullMatrix(name, 'base', val, None)
@@ -132,7 +143,7 @@ if __name__ == '__main__':
       self.matlab.close()
 
     def test_eval(self):
-      for i in xrange(100):
+      for i in range(100):
         ret = self.matlab.eval('disp \'hiush world%s\';' % ('b'*i))
         self.assertTrue('hiush world' in ret)
     

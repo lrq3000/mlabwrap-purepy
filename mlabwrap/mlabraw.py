@@ -6,15 +6,17 @@ were mlabraw.
 Author: Dani Valevski <daniva@gmail.com>
 License: MIT
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import sys
 
 is_win = sys.platform == 'win32'
 if is_win:
-    from matlabcom import MatlabCom as MatlabConnection
-    from matlabcom import MatlabError as error
+    from .matlabcom import MatlabCom as MatlabConnection
+    from .matlabcom import MatlabError as error
 else:
-    from matlabpipe import MatlabPipe as MatlabConnection
-    from matlabpipe import MatlabError as error
+    from .matlabpipe import MatlabPipe as MatlabConnection
+    from .matlabpipe import MatlabError as error
 
 
 def open(matlab_binary_path):

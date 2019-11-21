@@ -190,7 +190,13 @@ to him for releasing his package as open source.
 
 See the docu of ``MlabWrap`` and ``MatlabObjectProxy`` for more information.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
+from builtins import str
+from builtins import map
+from builtins import range
+from builtins import object
 __docformat__ = "restructuredtext en"
 __version__ = '1.1'
 __author__   = "Alexander Schmolck <a.schmolck@gmx.net>"
@@ -209,9 +215,9 @@ except ImportError:
 
 
 from tempfile import gettempdir
-import mlabraw
+from . import mlabraw
 
-from awmstools import update, gensym, slurp, spitOut, isString, escape, strToTempfile, __saveVarsHelper
+from .awmstools import update, gensym, slurp, spitOut, isString, escape, strToTempfile, __saveVarsHelper
 
 #XXX: nested access
 def _flush_write_stdout(s):
@@ -280,7 +286,6 @@ class MlabObjectProxy(object):
 
     def __setstate__(self, state):
         "Experimental unpickling support."
-        global mlab         #XXX this should be dealt with correctly
         old_name = state['name']
         mlab_name = "UNPICKLED%s__" % gensym('')
         tmp_filename = None
@@ -294,7 +299,7 @@ class MlabObjectProxy(object):
                        "%s = TMP_UNPICKLE_STRUCT__.%s;" % (mlab_name, old_name))
             mlabraw.eval(mlab._session, "clear TMP_UNPICKLE_STRUCT__;")
             # XXX
-            mlab._make_proxy(mlab_name, constructor=lambda *args: self.__init__(*args) or self)
+            self.__dict__['_mlabwrap']._make_proxy(mlab_name, constructor=lambda *args: self.__init__(*args) or self)
             mlabraw.eval(mlab._session, 'clear %s;' % mlab_name)
         finally:
             if tmp_filename and os.path.exists(tmp_filename):
@@ -303,7 +308,7 @@ class MlabObjectProxy(object):
 
     def __repr__(self):
         output = []
-        mlab._do('disp(%s)' % self._name, nout=0, handle_out=output.append)
+        self.__dict__['_mlabwrap']._do('disp(%s)' % self._name, nout=0, handle_out=output.append)
         rep = "".join(output)
         klass = self._mlabwrap._do("class(%s)" % self._name)
 ##         #XXX what about classes?
@@ -344,7 +349,7 @@ class MlabObjectProxy(object):
     def __setattr__(self, attr, value):
         self._set_part("%s.%s" % (self._name, attr), value)
     # FIXME still have to think properly about how to best translate Matlab semantics here...
-    def __nonzero__(self):
+    def __bool__(self):
         raise TypeError("%s does not yet implement truth testing" % type(self).__name__)
     def __len__(self):
         raise TypeError("%s does not yet implement __len__" % type(self).__name__)
@@ -506,8 +511,8 @@ class MlabWrap(object):
                    [all(size(%(vn)s) == 0), \
                     min(size(%(vn)s)) == 1 & ndims(%(vn)s) == 2, \
                     max(size(%(vn)s))];" % {'vn':varname})
-        is_empty, is_rank1, cell_len = map(int,
-                                           self._get("TMP_SIZE_INFO__", remove=True).flat)
+        is_empty, is_rank1, cell_len = list(map(int,
+                                           self._get("TMP_SIZE_INFO__", remove=True).flat))
         if is_empty:
             return []
         elif is_rank1:
@@ -603,7 +608,7 @@ class MlabWrap(object):
 
             if nout == 1: res = res[0]
             else:         res = tuple(res)
-            if kwargs.has_key('cast'):
+            if 'cast' in kwargs:
                 if nout == 0: raise TypeError("Can't cast: 0 nout")
                 return kwargs['cast'](res)
             else:
@@ -682,7 +687,7 @@ class MlabWrap(object):
             raise ValueError("Attributes don't look like this: %r" % attr)
 
         if attr.startswith('__'):
-            raise AttributeError, attr
+            raise AttributeError(attr)
 
         assert not attr.startswith('_') # XXX
 
@@ -715,7 +720,7 @@ class MlabWrap(object):
             # nargout('command') will tell us how many output arguments
             nout = self._do("nargout('%s')" % name)
 
-        except mlabraw.error, msg:
+        except mlabraw.error as msg:
             warnings.warn(
                 "Couldn't ascertain number of output args"
                 "for '%s', assuming 1." % name)
@@ -769,7 +774,7 @@ def saveVarsInMat(filename, varNamesStr, outOf=None, **opts):
     """Hacky convinience function to dump a couple of python variables in a
        .mat file. See `awmstools.saveVars`.
     """
-    from mlabwrap import mlab
+    from .mlabwrap import mlab
     filename, varnames, outOf = __saveVarsHelper(
         filename, varNamesStr, outOf, '.mat', **opts)
     try:

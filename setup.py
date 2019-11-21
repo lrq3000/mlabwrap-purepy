@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 setup(
     name='mlabwrap-purepy',
-    version='0.1',
-    description='Slightly improved fork of the pure Python mlabwrap Python to Matlab bridge.',
+    version='0.2',
+    description='Slightly improved fork of the pure Python (2 and 3) mlabwrap Python to Matlab bridge.',
     long_description=open('README.rst').read(),
     author='Charl P. Botha',
     author_email='cpbotha@vxlabs.com',
